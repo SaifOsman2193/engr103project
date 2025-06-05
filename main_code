@@ -1,0 +1,278 @@
+#include <Adafruit_CircuitPlayground.h>
+#include <AsyncDelay.h>
+
+int randomGame;
+int startingPoints = 1500; //sets max amount of points
+
+float X, Y, Z, totalAccel; //sets movement variables
+
+int timer = 0; //initializes timer
+AsyncDelay anticipate; //initializes headstart
+
+bool lastSwitchState;
+
+void setup() {
+  Serial.begin(9600);
+  CircuitPlayground.begin();
+  
+  CircuitPlayground.setAccelRange(LIS3DH_RANGE_8_G); //sets range of accelerometer
+  randomSeed(analogRead(A0)); //  for randomness
+}
+
+
+void loop() {
+  
+  Serial.println("Time to react, you silly goose. I'll give you a task, and you have to react quickly to keep your points!");
+  delay(5000);
+  for (int i = 0; i < 3 && startingPoints > 0; i++) { //give 3 games
+  randomGame = random(4);   //randomizes game selection
+    switch (randomGame) { //handles game selection
+      case 0:
+        buttons();
+        break;
+      case 1:
+        switchMove();
+        break;
+      case 2:
+        shake();
+        break;
+      case 3:
+        shout();
+        break;
+      default:
+        break;
+  }
+  if (startingPoints <= 0){ //game ends
+    Serial.println("damn, u lost all ur points. u lost lol");
+    colorWipe(CircuitPlayground.colorWheel(0),100);
+    delay(10000);
+    break;
+  }else{
+    Serial.print("You got "); Serial.print(startingPoints); Serial.println(" left.");
+    }
+  }
+  if (startingPoints > 0) {
+    Serial.print("CONGRATS!!! You beat the game with: "); Serial.print(startingPoints); Serial.println(" points!"); //winning sequence
+    pulseWave(CircuitPlayground.colorWheel(213),100);
+    delay(10000);
+  }
+}
+
+void buttons(){
+  timer = 0; //reset timer
+  Serial.println("Get ready to press both buttons, fool!");
+  antiCheatButtons();
+  Serial.println("Go!");
+  timingButtons();
+  forgivenessNMath();
+}
+
+void switchMove(){
+  timer = 0; //reset timer
+  Serial.println("Switch flipping time! Flip the switch real quick when told!!");
+  antiCheatSwitch();
+  Serial.println("Go!");
+  timingSwitch();
+  forgivenessNMath();
+}
+
+void shake(){
+  timer = 0; //reset timer
+  X = 0;
+  Y = 0;
+  Z = 0;
+  
+  totalAccel = 0;
+  Serial.println("Get ready to shake the board violently!!!");
+  antiCheatShake();
+  Serial.println("Go!");
+  timingShake();
+  forgivenessNMath();
+}
+
+void shout(){
+  timer = 0; //reset timer
+  Serial.println("Yell at me when told!");
+  antiCheatShout();
+  Serial.println("Go!");
+  timingShout();
+  forgivenessNMath();
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------//
+void forgivenessNMath(){
+  if (timer <= 500){ //if completed in under .5 secs, doens't punish
+    timer = 0;
+  }
+  if (timer > startingPoints){ //assures no negative starting points
+    startingPoints = 0;
+  }else{
+    startingPoints = startingPoints - timer; //takes away points
+  }
+}
+
+void timingButtons(){
+  if (anticipate.isExpired()){ //only starts timer once random timer ends
+    while (!(CircuitPlayground.leftButton() && CircuitPlayground.rightButton())) { //continues timer as long as button isn't pressed
+      delay(10);
+      timer += 1;
+    }
+  }
+}
+void antiCheatButtons() {
+  bool cheated;
+
+  do {
+    cheated = false;
+    anticipate.start(random(5000, 10000), AsyncDelay::MILLIS);
+
+    while (!anticipate.isExpired()) {
+      if (CircuitPlayground.leftButton() && CircuitPlayground.rightButton()) {
+        Serial.println("lol u thought u could cheat. minus 500 points for u");
+        startingPoints -= 500;
+        if (startingPoints < 0) {
+          startingPoints = 0;
+        }
+        delay(1000);
+        Serial.println("Get ready to go again, cheater!");
+        cheated = true;
+        break;
+      }
+    }
+  } while (cheated);
+}
+void timingSwitch(){
+  if (anticipate.isExpired()){ //only starts timer once random timer ends
+    while (lastSwitchState == CircuitPlayground.slideSwitch()) { //continues timer as long as switch hasn't moved
+      delay(10);
+      timer += 1;
+    }
+  }
+}
+void antiCheatSwitch() {
+  bool cheated;
+
+  do {
+    cheated = false;
+    lastSwitchState = CircuitPlayground.slideSwitch();
+    anticipate.start(random(5000, 10000), AsyncDelay::MILLIS);
+
+    while (!anticipate.isExpired()) {
+      if (lastSwitchState != CircuitPlayground.slideSwitch()) {
+        Serial.println("lol u thought u could cheat. minus 500 points for u");
+        startingPoints -= 500;
+        if (startingPoints < 0) {
+          startingPoints = 0;
+        }
+        delay(1000);
+        Serial.println("Get ready to go again, cheater!");
+        cheated = true;
+        break;
+      }
+    }
+  } while (cheated);
+}
+
+void timingShake(){
+  if (anticipate.isExpired()){ //only starts timer once random  timer ends
+    while (totalAccel < 80.0) { //continues timer as long board isn't shaked hard
+      X = CircuitPlayground.motionX();
+      Y = CircuitPlayground.motionY();
+      Z = CircuitPlayground.motionZ();
+
+      totalAccel = sqrt(X*X + Y*Y + Z*Z);
+
+      delay(10);
+      timer += 1;
+    }
+  }
+}
+void antiCheatShake() {
+  bool cheated;
+
+  do {
+    cheated = false;
+    anticipate.start(random(5000, 10000), AsyncDelay::MILLIS);
+
+    while (!anticipate.isExpired()) {
+      float x = CircuitPlayground.motionX();
+      float y = CircuitPlayground.motionY();
+      float z = CircuitPlayground.motionZ();
+
+      float totalAccel = sqrt(x*x + y*y + z*z);
+
+      if (totalAccel > 60.0) { // false start
+        Serial.println("lol u thought u could cheat. minus 500 points for u");
+        startingPoints -= 500;
+        if (startingPoints < 0) {
+          startingPoints = 0;
+        }
+        delay(1000);
+        Serial.println("Get ready to go again, cheater!");
+        cheated = true;
+        break;
+      }
+    }
+  } while (cheated);
+}
+
+void timingShout(){
+  if (anticipate.isExpired()){ //only starts timer once random timer ends
+    while (CircuitPlayground.mic.soundPressureLevel(10) < 70) {
+    delay(10);
+    timer += 1;
+    }
+  }
+}
+void antiCheatShout() {
+  bool cheated;
+
+  do {
+    cheated = false;
+    anticipate.start(random(5000, 10000), AsyncDelay::MILLIS);
+
+    while (!anticipate.isExpired()) {
+      int sound = CircuitPlayground.mic.soundPressureLevel(10);
+      if (sound > 70) {
+        Serial.println("lol u thought u could cheat. minus 500 points for u");
+        startingPoints -= 500;
+        if (startingPoints < 0) {
+          startingPoints = 0;
+        }
+        delay(1000);
+        Serial.println("Get ready to go again, cheater!");
+        cheated = true;
+        break;
+      }
+    }
+  } while (cheated);
+}
+
+//Starts from the middle of the circle and turns the lights purple, then turns them off in reverse order
+void pulseWave(int color, int delayTime) {
+  int mid = 5;
+  for (int offset = 0; offset <= mid; offset++) {
+    CircuitPlayground.setPixelColor(mid + offset, color);
+    CircuitPlayground.setPixelColor(mid - offset, color);
+    delay(delayTime);
+  }
+  for (int offset = mid; offset >= 0; offset--) {
+    CircuitPlayground.setPixelColor(mid + offset, 0);
+    CircuitPlayground.setPixelColor(mid - offset, 0);
+    delay(delayTime);
+  }
+  for (int x = 0; x < 10; x++) {
+    CircuitPlayground.setPixelColor(x, 0);  //Turn lights off
+  }
+}
+
+//Sequentially goes around the board and lights them up red
+void colorWipe(int color, int wait) {
+  for (int i = 0; i < 10; i++) {
+    CircuitPlayground.setPixelColor(i, color);
+    delay(wait);
+  }
+  for (int x = 0; x < 10; x++) {
+    CircuitPlayground.setPixelColor(x, 0);  //Turn lights off
+  } 
+}
