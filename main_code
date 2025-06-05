@@ -14,6 +14,9 @@ bool lastSwitchState;
 void setup() {
   Serial.begin(9600);
   CircuitPlayground.begin();
+
+  while (!Serial){
+  }
   
   CircuitPlayground.setAccelRange(LIS3DH_RANGE_8_G); //sets range of accelerometer
   randomSeed(analogRead(A0)); //  for randomness
@@ -141,6 +144,7 @@ void antiCheatButtons() {
     }
   } while (cheated);
 }
+
 void timingSwitch(){
   if (anticipate.isExpired()){ //only starts timer once random timer ends
     while (lastSwitchState == CircuitPlayground.slideSwitch()) { //continues timer as long as switch hasn't moved
