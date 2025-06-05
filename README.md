@@ -1,7 +1,7 @@
 # engr103project
 This code is for the Oregon State ENGR103H Spring Final Project
 
-It is a game that can be played on a CPX board. The code is uploaded through the Arduino IDE.
+It is a game that is played on a CPX board. The code is uploaded through the Arduino IDE.
 
 This is a reaction-time game in which you are tasked with doing certain things on the CPX board as fast as possible to maximize points.
 
