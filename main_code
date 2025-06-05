@@ -11,6 +11,8 @@ AsyncDelay anticipate; //initializes headstart
 
 bool lastSwitchState;
 
+bool game = true;
+
 void setup() {
   Serial.begin(9600);
   CircuitPlayground.begin();
@@ -19,45 +21,53 @@ void setup() {
   }
   
   CircuitPlayground.setAccelRange(LIS3DH_RANGE_8_G); //sets range of accelerometer
-  randomSeed(analogRead(A0)); //  for randomness
+  randomSeed(analogRead(A1)); //  for randomness
 }
 
 
 void loop() {
-  
-  Serial.println("Time to react, you silly goose. I'll give you a task, and you have to react quickly to keep your points!");
-  delay(5000);
-  for (int i = 0; i < 3 && startingPoints > 0; i++) { //give 3 games
-  randomGame = random(4);   //randomizes game selection
-    switch (randomGame) { //handles game selection
-      case 0:
-        buttons();
-        break;
-      case 1:
-        switchMove();
-        break;
-      case 2:
-        shake();
-        break;
-      case 3:
-        shout();
-        break;
-      default:
-        break;
-  }
-  if (startingPoints <= 0){ //game ends
-    Serial.println("damn, u lost all ur points. u lost lol");
-    colorWipe(CircuitPlayground.colorWheel(0),100);
-    delay(10000);
-    break;
-  }else{
-    Serial.print("You got "); Serial.print(startingPoints); Serial.println(" left.");
+  if (game){
+    introSounds();
+    Serial.println("Time to react, you silly goose. I'll give you a task, and you have to react quickly to keep your points!");
+    delay(5000);
+    startingPoints = 1500;
+    for (int i = 0; i < 3 && startingPoints > 0; i++) { //give 3 games
+    randomGame = random(4);   //randomizes game selection
+    delay(1000); //debounce
+      switch (randomGame) { //handles game selection
+        case 0:
+          buttons();
+          break;
+        case 1:
+          switchMove();
+          break;
+        case 2:
+          shake();
+          break;
+        case 3:
+          shout();
+          break;
+        default:
+          break;
     }
-  }
-  if (startingPoints > 0) {
-    Serial.print("CONGRATS!!! You beat the game with: "); Serial.print(startingPoints); Serial.println(" points!"); //winning sequence
-    pulseWave(CircuitPlayground.colorWheel(213),100);
-    delay(10000);
+    if (startingPoints <= 0){ //game ends
+      lossSounds();
+      Serial.println("damn, u lost all ur points. u lost lol");
+      colorWipe(CircuitPlayground.colorWheel(0),100);
+      delay(10000);
+      game = false; //game plays only once
+      break;
+    }else{
+      Serial.print("You got "); Serial.print(startingPoints); Serial.println(" left.");
+      }
+    }
+    if (startingPoints > 0) {
+      winSounds();
+      Serial.print("CONGRATS!!! You beat the game with: "); Serial.print(startingPoints); Serial.println(" points!"); //winning sequence
+      pulseWave(CircuitPlayground.colorWheel(213),100);
+      game = false; //game plays only once
+      delay(10000);
+    }
   }
 }
 
@@ -104,7 +114,7 @@ void shout(){
 
 //----------------------------------------------------------------------------------------------------------------------------------//
 void forgivenessNMath(){
-  if (timer <= 500){ //if completed in under .5 secs, doens't punish
+  if (timer <= 50){ //if completed in under .5 secs, doens't punish
     timer = 0;
   }
   if (timer > startingPoints){ //assures no negative starting points
@@ -222,7 +232,7 @@ void antiCheatShake() {
 
 void timingShout(){
   if (anticipate.isExpired()){ //only starts timer once random timer ends
-    while (CircuitPlayground.mic.soundPressureLevel(10) < 70) {
+    while (CircuitPlayground.mic.soundPressureLevel(10) < 90) {
     delay(10);
     timer += 1;
     }
@@ -237,7 +247,7 @@ void antiCheatShout() {
 
     while (!anticipate.isExpired()) {
       int sound = CircuitPlayground.mic.soundPressureLevel(10);
-      if (sound > 70) {
+      if (sound > 90) {
         Serial.println("lol u thought u could cheat. minus 500 points for u");
         startingPoints -= 500;
         if (startingPoints < 0) {
@@ -279,4 +289,29 @@ void colorWipe(int color, int wait) {
   for (int x = 0; x < 10; x++) {
     CircuitPlayground.setPixelColor(x, 0);  //Turn lights off
   } 
+}
+
+void introSounds(){
+  CircuitPlayground.playTone(880, 150);
+  CircuitPlayground.playTone(1047, 150);  
+  CircuitPlayground.playTone(1319, 150);  
+  CircuitPlayground.playTone(1568, 150);
+  CircuitPlayground.playTone(1760, 300);
+  delay(150);
+  CircuitPlayground.playTone(1397, 200);
+  CircuitPlayground.playTone(1568, 400);
+}
+void winSounds(){
+  CircuitPlayground.playTone(1047, 150);  
+  CircuitPlayground.playTone(1319, 150);  
+  CircuitPlayground.playTone(1568, 150);  
+  CircuitPlayground.playTone(1760, 300);  
+  delay(100);
+  CircuitPlayground.playTone(2093, 400);
+}
+void lossSounds(){
+  CircuitPlayground.playTone(880, 300);
+  CircuitPlayground.playTone(698, 300);  
+  CircuitPlayground.playTone(587, 300);   
+  CircuitPlayground.playTone(440, 500);   
 }
