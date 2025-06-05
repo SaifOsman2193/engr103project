@@ -21,12 +21,22 @@ At the end of the game, you will find your points total!
 
 ------------------------------------------------
 
+Inputs:
+- Accelerometer
+- Microphone
+- L,R Buttons
+- Switch
+
+Outputs:
+- NeoPixel LEDs
+- Tones from Speaker
+
+------------------------------------------------
+
+
 Dependencies:
 
-1.) CPX Board: [https://store.arduino.cc/products/circuit-playground-express?srsltid=AfmBOoo9Vo3Rtuem22u1l2O5rbfYSESYPHE-0pAqgfR_h-I3uo2KEs2U](url)
-
-2.) Arduino IDE: [https://www.arduino.cc/en/software/](url)
-
-3.) AsyncDelay Library
-
-4.) Circuit Playground Express Library 
+- CPX Board: [https://store.arduino.cc/products/circuit-playground-express?srsltid=AfmBOoo9Vo3Rtuem22u1l2O5rbfYSESYPHE-0pAqgfR_h-I3uo2KEs2U](url)
+- Arduino IDE: [https://www.arduino.cc/en/software/](url)
+- AsyncDelay Library
+- Circuit Playground Express Library 
